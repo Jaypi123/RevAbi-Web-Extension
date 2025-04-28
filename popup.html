@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RevAbi Filter</title>
+    <script src="jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<header>
+
+    <!-- Settings -->
+    <div id="container" class="container">
+        <div class="dropdown">
+            <button class="dropbtn"> <i class="fa fa-gear"></i>  Settings</button>
+            <div class="dropdown-content">
+                <div class="option">
+                    <label for="layout">Layout:</label>
+                    <select id="layout">
+                        <option value="grid">Grid</option>
+                        <option value="stack">Stack</option>
+                    </select>
+                </div>
+
+                <div class="option">
+                    <label for="theme">Theme:</label>
+                    <select id="theme">
+                        <option value="default">Default</option>
+                        <option value="dark">Dark Mode</option>
+                    </select>
+                </div>
+                    
+                <div class="option">
+                    <label for="text-size">Text Size:</label>
+                    <input type="range" id="text-size" min="10" max="30" value="16">
+                </div>
+            </div>
+        </div>
+
+        <div class="logo-header">
+            <div class="img">
+                <img class="logo" src="icons/icon2.png" alt="Filter Logo">
+            </div>
+
+            <div class="head">
+                <h1>RevAbi</h1>
+            </div>
+        </div>
+        
+        <!-- Star Ratings -->
+        <div class="box one">
+            <div class="app">
+                <div class="rating">
+                    <div class="rating_average"> 
+                        <h2 id="count"></h2>                   
+                        <div class="outer-star">
+                            <div class="inner-star"></div>
+                        </div>  
+                        <p class="total" id="total"></p>                  
+                    </div>
+                    <div class="row">
+                        <div class="col-1"><div>5&starf;</div></div>
+                        <div class="col-2">
+                            <div class="bar-container">
+                                <div class="bar bar-5-star"></div>
+                            </div>
+                        </div>
+                        <div class="col-3"><div class="rating-total" data-rating-count=""></div></div>
+                        <div class="col-1"><div>4&starf;</div></div>
+                        <div class="col-2">
+                            <div class="bar-container">
+                                <div class="bar bar-4-star"></div>
+                            </div>
+                        </div>
+                        <div class="col-3"><div class="rating-total" data-rating-count=""></div></div>
+                        <div class="col-1"><div>3&starf;</div></div>
+                        <div class="col-2">
+                            <div class="bar-container">
+                                <div class="bar bar-3-star"></div>
+                            </div>
+                        </div>
+                        <div class="col-3"><div class="rating-total" data-rating-count=""></div></div>
+                        <div class="col-1"><div>2&starf;</div></div>
+                        <div class="col-2">
+                            <div class="bar-container">
+                                <div class="bar bar-2-star"></div>
+                            </div>
+                        </div>
+                        <div class="col-3"><div class="rating-total" data-rating-count=""></div></div>
+                        <div class="col-1"><div>1&starf;</div></div>
+                        <div class="col-2">
+                            <div class="bar-container">
+                                <div class="bar bar-1-star"></div>
+                            </div>
+                        </div>
+                        <div class="col-3"><div class="rating-total" data-rating-count=""></div></div>
+                    </div>                   
+                </div>   
+            </div>             
+
+                <!-- Pie Chart -->
+                <div id="overall-view">
+                    <canvas id="pie_chart" arail-label="chart" height="160" width="150"></canvas>
+                </div> 
+
+        </div>
+
+        <div class="boxtwo">
+            <div class="pros">
+                <h1>Pros</h1>
+                <ul class="pros_list" id="pros-list">
+                </ul>
+            </div>
+
+            <div class="cons">
+                <h1>Cons</h1>
+                <ul class="cons_list" id="cons-list">
+                </ul>
+            </div>
+         </div>
+
+        </header> 
+
+    <!-- Button to start scraping -->
+    <div class="scrape-button">
+        <button id="scrape-button">Start RevAbi</button>
+    </div>
+
+    <br>
+    <!-- Loading -->
+    <div class="loader-container">
+        <div id="loader" class="loader" style="display: none;"></div>
+    </div>    
+    <br>
+
+    <!-- Reviews here -->
+    <ul class="review-list" id="review-list"></ul>
+
+    <div class="spinner"></div>
+
+    <div class="NoMoreReviews"> </div>
+
+    <div class="center_filter">
+        <button class="filtermore_btn" id="filtermore_btn">
+            <svg height="20" width="20" fill="#FFFFFF" viewBox="0 0 24 24" data-name="Layer 1" id="Layer_1" class="sparkle">
+                <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5ZM19.333,4.667,20.5,7l1.167-2.333L24,3.5,21.667,2.333,20.5,0,19.333,2.333,17,3.5Z"></path>
+            </svg>
+            <span class="text">Show More</span>
+        </button>
+    </div>
+    
+        <!-- CSV download button -->
+    <button id="save-reviews-btn">Download</button>
+
+    <!-- return to top -->
+    <button id="back-to-top" title="Go to top">Back to Top</button>
+
+    <br>
+
+    <script src="popup.js"></script>
+    <script src="settings.js"></script>
+    <script src="chart.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,822 @@
+to do list
+
+*xpath (automatic id fetching on reviews and buttons)
+*add reviews without removing the previous review
+*add the code to main system
+*magpababy
+
+
+BACKUP CODE (POPUP)
+
+let allReviews = []; // Array to hold all scraped reviews
+let allStarRatings = []; // Array to hold star ratings as symbols
+let allPercentages = []; // Array to hold the scraped percentages
+let totalScrapedReviews = 0; // Counter for total scraped reviews
+let countValue = ""; // Variable to hold the scraped count
+let totalReviews = ""; // Declare totalReviews at the top level
+let currentDisplayIndex = 0; // Track the number of reviews currently displayed
+let isScraping = false; // Flag to indicate if scraping is in progress
+let currentPage = 1; // Track the current page being scraped
+
+document.addEventListener('DOMContentLoaded', () => {
+    const scrapeButton = document.getElementById('scrape-button');
+    const moreButton = document.getElementById('filtermore_btn');
+
+    // Load saved data from storage
+    chrome.runtime.sendMessage({ action: "getData" }, (response) => {
+        allReviews = response.reviews || [];
+        allStarRatings = response.starRatings || [];
+        allPercentages = response.percentages || [];
+        countValue = response.count || "";
+        totalReviews = response.totalReviews || "";
+
+        totalScrapedReviews = allReviews.length;
+        currentDisplayIndex = Math.min(5, totalScrapedReviews); // Show only the first 10 reviews initially
+
+        if (allReviews.length > 0) {
+            updateUI(); // Update the UI with loaded data
+        } else {
+            console.log("No reviews available.");
+        }
+    });
+
+    // Handle scraping on scrapeButton click
+    scrapeButton.addEventListener('click', () => {
+        if (isScraping) return;
+        isScraping = true;
+        
+        chrome.runtime.sendMessage({ action: "clearData" }, () => {
+            console.log("Cleared old data.");
+            
+            // Start scraping after clearing the old data
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.scripting.executeScript({
+                    target: { tabId: tabs[0].id },
+                    function: scrapeReviewsPercentagesAndCount
+                }, (results) => {
+                    if (results[0] && results[0].result) {
+                        let newReviews = results[0].result.reviews;
+                        let newStarRatings = results[0].result.starRatings;
+                        let newPercentages = results[0].result.percentages;
+                        countValue = results[0].result.count;
+                        totalReviews = results[0].result.totalReviews;
+
+                        allReviews = newReviews; // Start fresh for new site
+                        allStarRatings = newStarRatings;
+                        allPercentages = newPercentages;
+                        totalScrapedReviews = allReviews.length;
+                        currentDisplayIndex = Math.min(5, totalScrapedReviews); // Show only the first 10 reviews
+
+                       // moreButton.style.display = totalScrapedReviews > 10 ? 'block' : 'none'; // Show more button if needed
+
+                        // Save updated data
+                        chrome.runtime.sendMessage({
+                            action: "setData",
+                            data: {
+                                reviews: allReviews,
+                                starRatings: allStarRatings,
+                                percentages: allPercentages,
+                                count: countValue,
+                                totalReviews: totalReviews
+                            }
+                        });
+
+                        updateUI(); // Refresh UI
+                    }
+                    isScraping = false;
+                });
+            });
+        });
+    });
+
+    // Handle loading more reviews or fetching the next page
+    moreButton.addEventListener('click', () => {
+        if (currentDisplayIndex < totalScrapedReviews) {
+            currentDisplayIndex += 5; // Show more reviews from current set
+            updateUI(); // Refresh the UI
+        } else {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                loadMoreReviews(tabs[0].id); // Load more reviews from the next page
+            });
+        }
+    });
+});
+
+// Function to load more reviews, percentages, and count
+function loadMoreReviews(tabId) {
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: loadMoreReviewsPercentagesAndCount
+    });
+}
+
+// Function to scrape reviews, percentages, and count from the page
+function scrapeReviewsPercentagesAndCount() {
+    let reviews = [];
+    let percentages = [];
+    let starRatings = [];
+    let count = "";
+    let totalReviews = ""; 
+
+    // Check if the website is valid
+    const isShopee = document.querySelector('.shopee-product-rating__main') !== null;
+    const isPlaystore = document.querySelector('.RHo1pe') !== null;
+    const isZalora = document.querySelector('.pt-5') !== null;
+    const isAliExpress = document.querySelector('.list--itemContent--onkwE7H') !== null;
+    const isSephora = document.querySelector('.product-review') !== null;
+    const isYelp = document.querySelector('.y-css-mu4kr5') !== null;
+    
+
+    if (isShopee) {
+        // Scrape reviews for Shopee
+        const reviewNodes = document.querySelectorAll('.shopee-product-rating__main');
+        reviewNodes.forEach(node => {
+            reviews.push(node.innerText.trim());
+        });
+
+        // Scrape percentages for Shopee
+        const percentageNodes = document.querySelectorAll('.product-rating-overview__filter');
+        percentageNodes.forEach((node, index) => {
+            // Check if the index is between 1 and 5 (inclusive)
+            if (index >= 1 && index <= 5) {
+                let text = node.innerText.trim();
+        
+                // Clean the text to remove unwanted parts
+                text = text.replace(/^\d+ Star\s*/g, ''); // alisin yung unang number and 'star'
+
+
+                if (text.trim() && text.includes('(')) {
+                    percentages.push(text.trim());
+                }
+            }
+        });
+        
+    // Scrape star ratings for Shopee
+        const starNodes = document.querySelectorAll('.shopee-product-rating__rating'); // Replace with actual review item selector
+        starNodes.forEach(node => {
+            // Select filled stars (active)
+            const filledStars = node.querySelectorAll('.shopee-svg-icon.icon-rating-solid--active');
+   
+            // Count filled stars
+            const starCount = filledStars.length; // Get the number of filled stars
+
+            // Ensure the star rating does not exceed 5 stars
+            if (starCount <= 5) {
+                starRatings.push(starCount); // Push the count to the starRatings array
+            }
+        });
+
+        // Convert star ratings to star symbols
+        starSymbols = starRatings.map(count => '&starf;'.repeat(count) + '&star;'.repeat(5 - count));
+       
+        // Scrape count for Shopee
+        const countNode = document.querySelector('.dQEiAI');
+        if (countNode) {
+            count = countNode.innerText.trim();
+        }
+
+        // Select the total reviews/ratings node
+        const totalReviewsNode = document.querySelector('.flex.asFzUa'); 
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        } 
+
+    } else if (isPlaystore) { // YUNG count nalang 
+        // Scrape reviews for Playstore
+        const reviewNodes = document.querySelectorAll('.RHo1pe');
+        reviewNodes.forEach(node => {
+            reviews.push(node.innerText.trim());
+        });
+
+        // Scrape count for Shopee
+        const countNode = document.querySelector('.jILTFe');
+            if (countNode) {
+                count = countNode.innerText.trim();
+            }
+        
+        // scrape number of reviews per star
+        const ratingNodes = document.querySelectorAll('.JzwBgb');   
+        for (const node of ratingNodes) {
+            const ratingTitle = node.getAttribute('aria-label');  
+            if (ratingTitle) {
+                // Use a regex to extract the number from the ratingTitle
+                const match = ratingTitle.match(/(\d{1,3}(?:,\d{3})*)/); // Matches numbers with commas
+                if (match) {
+                    percentages.push(match[0]);  // append/push into the array percentages
+                }
+            }
+        }
+            
+        const totalReviewsNode = document.querySelector('.EHUI5b'); 
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+
+        // Select all the div elements that contain the star ratings
+        const starNodes = document.querySelectorAll('.F7XJmb');
+
+        reviewNodes.forEach(node => {
+            const filledStars = node.querySelectorAll('span.Z1Dz7b'); // Filled stars (active stars)
+            const emptyStars = node.querySelectorAll('span.Wi7KIe');  // Empty stars (inactive stars)
+
+            // Count the number of filled stars
+            const starCount = filledStars.length;
+
+            // Ensure the star rating is between 1 and 5
+            if (starCount >= 1 && starCount <= 5) {
+                starRatings.push(starCount); // Add the star rating to the array
+            }
+        });
+
+    // Convert star ratings to star symbols
+    starSymbols = starRatings.map(count => '★'.repeat(count) + '☆'.repeat(5 - count));
+
+    } else if (isZalora) { // Ayaw lumabas ng percentage amp. update: ayaw talaga huhu ayusin ko bukas
+        // Scrape reviews for Zalora
+        const reviewNodes = document.querySelectorAll('.pt-5');
+        reviewNodes.forEach(node => {
+            reviews.push(node.innerText.trim());
+        });
+
+        // Scrape percentages for Zalora
+        const percentageNodes = document.querySelectorAll('div.mt-2.space-y-1');  
+        percentageNodes.forEach(node => {
+            percentages.push(node.innerText.trim());
+        });
+
+        // Scrape count for Zalora
+        const countNodes = document.querySelectorAll('.text-\\[32px\\].font-medium'); 
+        // Check if any nodes were found
+        if (countNodes.length > 0) {
+            countNodes.forEach(node => {
+                count += node.innerText + " ";  // Append the text from each node
+            });
+            count = count.replace(/\/5.*/, ''); // Remove any trailing spaces
+        } 
+        
+        
+
+        const totalReviewsNode = document.querySelector('.inline-flex.gap-1'); // Replace with actual selector
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+
+        // Scrape star ratings for Zalora ( HINDI PA MAAYOS! )
+        const starContainers = document.querySelectorAll('span.inline-flex.gap-1'); // Select the containers that hold the stars
+
+        starContainers.forEach(container => {
+            const stars = container.querySelectorAll('svg'); // Properly escape special characters in the class names
+            let starCount = 0; // Initialize star count to 0
+
+            stars.forEach(star => {
+                const pathElement = star.querySelector('path'); // Get the <path> element inside the SVG
+
+                if (pathElement) {
+                    const dAttribute = pathElement.getAttribute('d'); // Get the 'd' attribute of the <path> element
+                    console.log(dAttribute);
+
+                    // Check if 'd' attribute starts with 'M5.131' (filled star)
+                    if (dAttribute && dAttribute.startsWith('M5.131')) {
+                        starCount++; // Increment for filled stars
+                    }
+                    // No need to decrement for empty stars, just ignore them
+                }
+            });
+
+            // Push the total star count for this review into the starRatings array
+            starRatings.push(starCount);
+        });
+
+        // Convert star ratings to star symbols (e.g., ★ for filled, ☆ for empty)
+        starSymbols = starRatings.map(count => '★'.repeat(count) + '☆'.repeat(5 - count));
+
+    } else if (isAliExpress) { // Goods na pero umuulit yung sa Count
+        // Scrape reviews for AliExpress
+        const reviewNodes = document.querySelectorAll('.list--itemContent--onkwE7H'); 
+        reviewNodes.forEach(node => {
+            reviews.push(node.innerText.trim());
+        });
+
+        // Scrape percentages for AliExpress
+        const percentageNodes = document.querySelectorAll('.header--progressNum--s8fyONx');
+            percentageNodes.forEach(node => {
+                const percentage = node.innerText.trim();
+                // Alisin yung duplicate
+                if (!percentages.includes(percentage)) {
+                    percentages.push(percentage);
+                }
+        });
+
+        // Scrape count for AliExpress
+        const countNode = document.querySelector('div.header--num--GaAGwoZ'); 
+        if (countNode) {
+            count = countNode.innerText.trim();
+        }
+
+        const totalReviewsNode = document.querySelector('.filter--filterItem--udTNLrr.filter--active--JGzZ0BK'); 
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+
+        // Select all the div elements that contain the star ratings
+        const starNodes = document.querySelectorAll('.stars--box--vHzUWQ9');
+
+        reviewNodes.forEach(node => {
+            const filledStars = node.querySelectorAll('span.comet-icon.comet-icon-starreviewfilled'); // Filled stars (active stars)
+            const emptyStars = node.querySelectorAll('span.comet-icon.comet-icon-starreview');  // Empty stars (inactive stars) 
+
+            // Count the number of filled stars
+            const starCount = filledStars.length;
+
+            // Ensure the star rating is between 1 and 5
+            if (starCount >= 1 && starCount <= 5) {
+                starRatings.push(starCount); // Add the star rating to the array
+            }
+        });
+
+    // Convert star ratings to star symbols
+    starSymbols = starRatings.map(count => '★'.repeat(count) + '☆'.repeat(5 - count));
+
+    } else if (isSephora) { 
+        // Ayusin pa, konti na lang
+        const reviewNodes = document.querySelectorAll('.product-review');
+        reviewNodes.forEach(node => {
+        reviews.push(node.innerText.trim());
+        });
+
+
+        // Scrape percentages for Sephora
+        const percentageNodes = document.querySelectorAll('.col-md-1.bar-value');
+        percentageNodes.forEach(node => {
+            percentages.push(node.innerText.trim());
+        });
+
+        // Scrape count for Sephora
+        const countNode = document.querySelector('div.row.averate-rating'); 
+        if (countNode) {
+            count = countNode.innerText.trim();
+        }
+
+        const totalReviewsNode = document.querySelector('.row.total-review'); // Replace with actual selector
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+
+        // Select all the review containers that contain the star ratings (adjust the selector as needed)
+        const starNodes = document.querySelectorAll('div.rateit-range');
+
+        for (let i = 2; i <= 11 && i < starNodes.length; i++) {
+        const node = starNodes[i];
+        
+        // Get the value from the aria-valuenow attribute, which contains the star rating (could be whole or decimal)
+        const starRating = parseFloat(node.getAttribute('aria-valuenow'));
+
+        // Check if the aria-valuenow attribute is present
+        if (!isNaN(starRating)) {
+            // Round the star rating to the nearest integer for full star ratings (if needed)
+            const roundedRating = Math.round(starRating);
+
+            // Ensure the star rating is valid (between 1 and 5)
+            if (roundedRating >= 1 && roundedRating <= 5) {
+                starRatings.push(roundedRating); // Add the rounded star rating to the array
+            }
+        } else {
+            console.log('No aria-valuenow attribute found for this node.');
+        }
+    }
+
+    // Convert star ratings to star symbols (full stars + empty stars)
+    const starSymbols = starRatings.map(count => '★'.repeat(count) + '☆'.repeat(5 - count));
+
+    } else if (isYelp) { // Goods na goods na
+        // Scrape reviews for Sephora
+        const reviewNodes = document.querySelectorAll('li.y-css-mu4kr5');
+        reviewNodes.forEach(node => {
+            reviews.push(node.innerText.trim());
+        });
+
+        // Scrape count for Sephora
+        const countNodes = document.querySelectorAll('.y-css-1om4a3q');
+        for (const node of countNodes) {
+            const ratingTitle = node.getAttribute('aria-label');  
+                if (ratingTitle) {
+                    count = ratingTitle.replace(/star rating/i, '').trim();  // alisin yung unnecessary text
+                        break;  // Stop after the first valid rating is found
+                    }
+        }
+
+        const totalReviewsNode = document.querySelector('.y-css-1g19ugt'); // Replace with actual selector
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+
+        // Select all the div elements that contain the star ratings
+        const starNodes = document.querySelectorAll('.y-css-1jwbncq');
+
+        reviewNodes.forEach(node => {
+            const filledStars = node.querySelectorAll('.y-css-1tnjuko'); // Filled stars (active stars)
+            const emptyStars = node.querySelectorAll('.y-css-9qhmse');  // Empty stars (inactive stars)
+
+            // Count the number of filled stars
+            const starCount = filledStars.length;
+
+            // Ensure the star rating is between 1 and 5
+            if (starCount >= 1 && starCount <= 5) {
+                starRatings.push(starCount); // Add the star rating to the array
+            }
+        });
+
+    } else { // Lazada Goods na
+        // Scrape reviews for Shopee
+        const reviewNodes = document.querySelectorAll('.item-content');
+        reviewNodes.forEach(node => {
+                // Check if the review contains a seller response
+                const sellerResponse = node.querySelector('.item-content--seller-reply');  // Check if this selector matches the seller response section
+
+                if (!sellerResponse) {
+                        // Only push reviews without seller responses
+                        reviews.push(node.innerText.trim());
+                    } else {
+                        console.log('Skipped review with seller response');
+                    }
+        });
+
+        // Scrape percentages for Lazada
+        const percentageNodes = document.querySelectorAll('span.percent');
+        percentageNodes.forEach(node => {
+            percentages.push(node.innerText.trim());
+        });
+
+        // Scrape count for Lazada
+        const countNode = document.querySelector('.score-average');
+        if (countNode) {
+            count = countNode.innerText.trim();
+        }
+
+        const totalReviewsNode = document.querySelector('div.count'); // Replace with actual selector
+        if (totalReviewsNode) {
+            totalReviews = totalReviewsNode.innerText.trim(); // Store the total reviews
+        }
+    }
+
+        // Scrape star ratings for Lazada
+        const starContainers = document.querySelectorAll('.container-star.starCtn.left'); // Select the containers that hold the stars
+
+        starContainers.forEach(container => {
+        const stars = container.querySelectorAll('img.star'); // Select all star images within the container
+            let starCount = 0; // Initialize count for filled stars
+   
+            stars.forEach(star => {
+                const src = star.getAttribute('src'); // Get the source of the star image
+
+               // Check if the star image is filled or empty
+               if (src.includes('TB19Z')) {
+                   // This is a filled star
+                   starCount++; // Increment count for filled stars
+               }
+           });
+
+           // Push the total star count for this review into the starRatings array
+           starRatings.push(starCount);
+       });
+     
+       // Convert star ratings to star symbols
+       starSymbols = starRatings.map(count => '&starf;'.repeat(count) + '&star;'.repeat(5 - count));
+
+    return { reviews: reviews, percentages: percentages, count: count,  totalReviews: totalReviews, starRatings: starSymbols  };
+}
+
+// Function to load more reviews, percentages, and count
+function loadMoreReviews(tabId) {
+    chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        function: loadMoreReviewsPercentagesAndCount // Call the same function for loading more reviews
+    });
+}
+
+// Function to load more reviews from the page
+function loadMoreReviewsPercentagesAndCount() {
+    const isShopee = document.querySelector('.shopee-product-rating__main') !== null;
+
+    const nextButton = isShopee 
+        ? document.querySelector('button.shopee-icon-button.shopee-icon-button--right') 
+        : document.querySelector('.next-icon.next-icon-arrow-right.next-icon-medium.next-icon-last') !== null
+            ? document.querySelector('.next-icon.next-icon-arrow-right.next-icon-medium.next-icon-last') 
+            : document.querySelector('a.page.next') || 
+              document.querySelector('a.next-link, .navigation-button__09f24__m9qRz.y-css-7ln3jw');
+
+    if (nextButton && !nextButton.disabled) {
+        nextButton.click(); // Click the button to load more reviews
+
+        // Wait for new reviews to load
+        setTimeout(() => {
+            const newScrapedData = scrapeReviewsPercentagesAndCount(); // Scrape new reviews, percentages, and count
+
+            // Append new data to existing arrays
+            allReviews = allReviews.concat(newScrapedData.reviews);
+            allStarRatings = allStarRatings.concat(newScrapedData.starRatings);
+            totalScrapedReviews = allReviews.length;
+
+            // Save updated data
+            chrome.runtime.sendMessage({
+                action: "setData",
+                data: {
+                    reviews: allReviews,
+                    starRatings: allStarRatings,
+                    percentages: allPercentages,
+                    count: countValue,
+                    totalReviews: totalReviews
+                }
+            });
+
+            updateUI(); // Refresh the UI
+        }, 2000); // Adjust delay as necessary
+    } else {
+        console.log("No more reviews button found or not visible.");
+    }
+}
+
+// Function to update the UI
+function updateUI() {
+    $('#review-list').empty(); // Clear existing reviews
+
+    allReviews.slice(0, currentDisplayIndex).forEach((review, index) => {
+        const starRating = allStarRatings[index] || "No Rating";
+        document.getElementById('review-list').insertAdjacentHTML('beforeend', `
+            <li class="column">
+                <img class="satisfaction_img" src="img/pos1.png" alt="Filter Logo"> <br>
+                <strong class="number_rev">Review #${index + 1}</strong>
+                <br><br><br>
+                <span>${starRating}</span> <br>
+                <p class="reviews">${review}</p>
+                <p class="sentiment">Sentiment:</p>
+                <button class="toggle-btn">Show Original</button>
+            </li>
+        `);
+    });
+
+    // Function to display percentages in the HTML
+    function displayPercentages(percentages) {
+        const ratingTotals = document.querySelectorAll('.rating-total');
+
+        // Ensure we have the same amount of rating elements as percentages
+        for (let i = 0; i < ratingTotals.length; i++) {
+            if (i < percentages.length) {
+                // Update the data-rating-count and inner text with scraped percentages
+                ratingTotals[i].setAttribute('data-rating-count', percentages[i]);
+                ratingTotals[i].innerText = percentages[i];
+            }
+        }
+    }
+
+    // Call the function with the scraped percentages
+    displayPercentages(allPercentages);
+
+    $('#percentages').text(allPercentages.join(', '));  // Display percentages
+    $('#count').html(`${countValue} &starf;`);  // Display count
+    $('#total').text(totalReviews);  // Display total number of reviews
+
+    // New section to display overall product view based on countValue
+    const overallView = getOverallView(countValue);
+    $('#overall-view').html(overallView); // Append the overall view to a specific container
+}
+
+// Function to determine overall view based on countValue
+function getOverallView(count) {
+    const rating = parseFloat(count); // Use parseFloat to handle decimal ratings
+
+    if (rating >= 4.5) {
+        return `
+            <div class="two">
+                <h2>Positive</h2>
+                <p>The product has a positive review. Excellent: This product is highly recommended!</p>
+            </div>
+        `;
+    } else if (rating >= 4) {
+        return `
+            <div class="two">
+                <h2>Positive</h2>
+                <p>The product has a positive review. Very Good: Most users are satisfied with this product.</p>
+            </div>
+        `;
+    } else if (rating >= 3) {
+        return `
+            <div class="two">
+                <h2>Neutral</h2>
+                <p>The product has mixed reviews. Average: Some users are satisfied while others are not.</p>
+            </div>
+        `;
+    } else if (rating >= 2) {
+        return `
+            <div class="two">
+                <h2>Negative</h2>
+                <p>The product has a negative review. Many users are not satisfied with this product.</p>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="two">
+                <h2>Very Negative</h2>
+                <p>The product has a very negative review. It might not be a good choice.</p>
+            </div>
+        `;
+    }
+}
+
+/*
+count = product-rating-overview__filter
+reviews  = shopee-product-rating__main
+next page = shopee-icon-button.shopee-icon-button--right 
+
+lazada 
+total_rating = score-average
+
+shopee
+total_rating = (no data)
+
+zalora 
+reviews = pt-5
+count = flex items-center gap-2
+total_reviews = text-sm.text-grey-80
+total_rating = mt-2 space-y-1 note: wala syang total ratings ang meron sya ay ganito [Runs small 3%] [True to size 80%]
+
+playstore
+reviews = RHo1pe
+total_rating = jILTFe
+total_reviews = EHUI5b // not yet added
+count = .RutFAf.wcB8se 'title'
+
+aliexpress
+reviews = list--itemBox--zF4Z5NT
+total_rating = header--num--XJ6wKJ5
+total_reviews = filter--filterItem--WGNBYnm.filter--active--hfp934x
+count = header--progressNum--WdikB1F
+
+sephora
+reviews = row
+total_rating = row.averate-rating
+total_reviews = row.total-review
+count = col-md-1.bar-value
+
+yelp
+reviews = .y-css-ya63xp
+total_rating = .y-css-kw85nd
+total_reviews =  .y-css-1g19ugt
+count = col-md-1.bar-value
+
+
+All, 5 Star (4.1K), 4 Star (508), 3 Star (208), 2 Star (83), 1 Star (179), With Comments (1.2K), With Media (547)
+
+
+
+to do:
+star ratings for sephora an yelp
+
+code reserve:
+        // Ayusin pa, konti na lang
+    const reviewNodes = document.querySelectorAll('.product-review');
+
+reviewNodes.forEach(node => {
+    const reviewText = node.innerText; // Get the review text
+
+    // Regular expression to match the structured review format
+    const regex = /(\d{1,2} \w{3} \d{4}) ([\w\s]+) (\w+) (\d+ml) - (.+)/;
+    const match = regex.exec(reviewText); // Apply regex to the review text
+
+    if (match) {
+        // Create a single formatted string for the review
+        const formattedReview = `
+            ${match[1]}
+            ${match[2]}
+            ${match[3]}
+            ${match[4]} - ${match[5]}
+        `;
+
+        reviews.push(formattedReview); // Trim to remove extra whitespace
+    } else {
+        // If no match, log that it didn't match and push raw text
+        console.log("No match for this review text.");
+        reviews.push(reviewText);
+    }
+});
+
+// For debugging, log the reviews array
+console.log("Scraped Reviews: ", reviews);
+*/
+
+
+
+BACKUP CODE (BACKGROUND)
+// Define the global variables at the top
+let allReviews = [];
+let allStarRatings = [];
+let allPercentages = [];
+let countValue = "";
+let totalReviews = "";
+let reviewsToShow = 5;  // Number of reviews to show initially
+
+// Function to save data to storage
+function saveData() {
+    chrome.storage.local.set({
+        reviews: allReviews,
+        starRatings: allStarRatings,
+        percentages: allPercentages,
+        count: countValue,
+        totalReviews: totalReviews,
+        reviewsToShow: reviewsToShow  // Save the number of reviews to show
+    }, () => {
+        console.log("Data saved to storage.");
+    });
+}
+
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "getData") {
+        // Send only the first `reviewsToShow` number of reviews
+        sendResponse({
+            reviews: allReviews.slice(0, reviewsToShow),
+            starRatings: allStarRatings.slice(0, reviewsToShow),
+            percentages: allPercentages,
+            count: countValue,
+            totalReviews: totalReviews
+        });
+    } else if (request.action === "setData") {
+        // Update data when receiving new scraped data
+        allReviews = request.data.reviews;
+        allStarRatings = request.data.starRatings;
+        allPercentages = request.data.percentages;
+        countValue = request.data.count;
+        totalReviews = request.data.totalReviews;
+        reviewsToShow = 100;  // Reset to show the first 100 reviews
+        saveData();
+    } else if (request.action === "clearData") {
+        // Clear stored data
+        allReviews = [];
+        allStarRatings = [];
+        allPercentages = [];
+        countValue = "";
+        totalReviews = "";
+        reviewsToShow = 100; // Reset to default
+
+        saveData();  // Save the cleared state to storage
+        sendResponse({ success: true });
+    } else if (request.action === "loadMoreReviews") {
+        // Increase the number of reviews to show by 10
+        reviewsToShow += 5;
+
+        // Check if we reached the end of the review list
+        const hasMoreReviews = reviewsToShow < allReviews.length;
+
+        // Respond with the next set of reviews
+        sendResponse({
+            reviews: allReviews.slice(0, reviewsToShow),
+            starRatings: allStarRatings.slice(0, reviewsToShow),
+            hasMoreReviews: hasMoreReviews  // Let the popup know if there are more reviews to load
+        });
+
+        saveData();  // Save updated reviewsToShow
+    } else if (request.action === "clearData") {
+        // Clear stored data
+        allReviews = [];
+        allStarRatings = [];
+        allPercentages = [];
+        countValue = "";
+        totalReviews = "";
+        reviewsToShow = 5; // Reset to default
+    
+        saveData();  // Save the cleared state to storage
+        sendResponse({ success: true });
+    }
+    return true; // Keep the messaging channel open for asynchronous response
+});
+
+/*
+// Function to send scraped reviews to the Flask API
+function sendReviewsToAPI() {
+    fetch('http://localhost:5000/api/set_reviews', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            reviews: allReviews  // Only send the reviews
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Reviews sent successfully:", data);
+    })
+    .catch(error => {
+        console.error("Error sending reviews:", error);
+    });
+}
+
+// Listen for messages from the popup to trigger sending reviews
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "sendReviews") {
+        sendReviewsToAPI();
+        sendResponse({ success: true });
+    }
+    return true; // Keep the messaging channel open for asynchronous response
+});
+*/

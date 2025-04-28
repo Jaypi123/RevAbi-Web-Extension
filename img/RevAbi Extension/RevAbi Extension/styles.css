@@ -1,0 +1,392 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #D4C0AB;
+}
+
+header {
+    background-color: #C19E77;
+    color: rgb(0, 0, 0);
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.logo-header {
+    justify-content: center;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.settings {
+    padding: 10px;
+    font-size: 16px;
+    background-color: #5E503F;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.settings:hover{
+    opacity: 50%;
+}
+/* Popup Container */
+.container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+/* Popup Content */
+.popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.popup a{
+    color: #EAE0D5;
+    font-size: 20px;
+    background-color: #C9AD93;
+}
+
+/* Settings content */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: red;
+}
+
+.option {
+    margin-bottom: 15px;
+}
+
+.option label {
+    display: inline-block;
+    width: 100px;
+}
+
+.content {
+    padding: 20px;
+}
+
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+.violet {
+    background-color: #8a2be2;
+    color: #fff;
+}
+/* ----- */
+
+.logo-header img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.logo-header {
+    text-align: center;
+}
+
+.row {
+    display: flex;
+    flex: 1 1 50%;
+    flex-wrap: wrap;
+}
+
+/*
+.progress-bar {
+    height: 13px;
+    background-color: #EAE0D5;
+    justify-content: center;
+
+}*/
+
+.two {
+    background-color: #C9AD93;
+    margin: 8px;
+    padding: 8px;
+    border-radius: 5%;
+}
+
+.two h2 {
+    text-align: center;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+}
+
+/* Reviews List */
+.review-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.review-list {    
+    list-style-type: none;
+    padding: 5px;
+    margin: 5px;
+}
+
+.column {
+    flex: 0 1 48%;
+}
+
+.date {
+    float: right;
+}
+
+.column {
+    min-width: 260px;
+    background-color: #C9AD93;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    border: solid 1px;
+    border-color: #5E503F;
+}
+
+.column p{
+    margin-top: 10px;
+}
+
+/* STAR COLOR */
+.column span{
+    font-size: 140%;
+    border: 10px;
+    color: #21130B;
+}
+
+.satisfaction_img {
+    vertical-align: middle;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 10px;
+    float: left;
+}
+
+:root {
+    --primary: #181736;
+    --secondary : #252549;  
+    --text-color: #fff;
+}
+
+.app{
+    color: var(--text-color); 
+    display: grid;
+}
+
+.rating{  
+    align-items: center;
+    column-gap: 2rem;
+    display: flex;
+    background-color:#C9AD93;
+    
+}
+
+.rating_average{
+    height: 80px;
+    width: 130px;
+    margin: 20px 20px 20px 20px; 
+    background-color: var(--secondary);
+    padding: 10px;
+    padding-bottom: 40px;
+    border-radius: .8rem;
+    text-align: center;
+}
+
+.rating_average h2{
+    font-size: 1.5rem;
+}
+
+.rating_average p{
+    margin-top: .10rem;
+    letter-spacing: .1rem;  
+}
+
+.rating_progress{
+    width: 300px;
+  
+}
+
+.rating_progress-value {
+    height: 13rem;  /*taas*/
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.rating_progress-value .star{
+    font-size: 1.2rem;
+    color: gold; 
+}
+
+.user_rate{
+    margin-left: -148px;
+    margin-top: -418px;
+    margin-bottom: -400px;
+}
+
+.user_rate p{
+    padding: 6px;
+    margin-bottom: 9px;
+}
+
+.rating_progress .bar5{
+    flex: 1 1 0;
+    height: 8px;
+    border-radius: .5rem;
+    background-color: rgba(17, 17, 12, 0.133);
+    margin-left: 35px;  
+    width: 150px;  
+}
+
+.bar4 {
+    flex: 1 1 0;
+    height: 8px;
+    border-radius: .5rem;
+    background-color: rgba(17, 17, 12, 0.133);
+    margin-left: 35px; 
+    width: 150px;     
+}
+
+.bar3 {
+    flex: 1 1 0;
+    height: 8px;
+    border-radius: .5rem;
+    background-color: rgba(17, 17, 12, 0.133);
+    margin-left: 35px; 
+    width: 150px;   
+}
+
+.bar2{
+    flex: 1 1 0;
+    height: 8px;
+    border-radius: .5rem;
+    background-color: rgba(17, 17, 12, 0.133);
+    margin-left: 35px;
+    width: 150px;       
+}
+
+.bar1{
+    flex: 1 1 0;
+    height: 8px;
+    border-radius: .5rem;
+    background-color: rgba(17, 17, 12, 0.133);
+    margin-left: 35px;
+    width: 150px;     
+}
+
+.user_bar5{
+    height: 100%;
+    background-color: gold;
+    border-radius: .5rem;
+    margin-top: -175px;
+    width: 130px;
+    
+}
+.user_bar4{
+    height: 100%;
+    background-color: gold;
+    width: 100px;
+    border-radius: .5rem;
+    margin-top: 30px;
+}
+.user_bar3{
+    height: 100%;
+    background-color: gold;
+    width: 30px;
+    border-radius: .5rem;
+    margin-top: 28px;
+}
+
+.user_bar2{
+    height: 100%;
+    background-color: gold;
+    width:5px;
+    border-radius: .5rem;
+    margin-top: 29px;
+}
+
+.user_bar1{
+    height: 100%;
+    background-color: gold;
+    width: 1px;
+    border-radius: .5rem;
+    margin-top: 30px;
+}
+
+
+/* FILTER MORE BUTTON */    
+.center_filter {
+    justify-content: center;
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.filtermore_btn {
+  border: none;
+  width: 10em;
+  height: 3.6em;
+  border-radius: 3em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 11px;
+  background: #1C1A1C;
+  cursor: pointer;
+  transition: all 450ms ease-in-out;
+}
+
+.sparkle {
+  fill: #AAAAAA;
+  transition: all 800ms ease;
+}
+
+.text {
+  font-weight: 600;
+  color: #AAAAAA;
+  font-size: small;
+}
+
+.filtermore_btn:hover {
+  background: linear-gradient(0deg,#A47CF3,#683FEA);
+  box-shadow: inset 0px 1px 0px 0px rgba(255, 255, 255, 0.4),
+  inset 0px -4px 0px 0px rgba(0, 0, 0, 0.2),
+  0px 0px 0px 4px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.filtermore_btn:hover .text {
+  color: white;
+}
+
+.filtermore_btn:hover .sparkle {
+  fill: white;
+  transform: scale(1.2);
+} 
