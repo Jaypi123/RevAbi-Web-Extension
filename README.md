@@ -62,13 +62,21 @@ python backend.py
 ```
 RevAbi Extension/
 │
-├── backend.py             # Flask server handling API requests
-├── best_review_model.pkl  # Trained SVM model for spam detection
-├── tfidf_vectorizer.pkl    # TF-IDF vectorizer used during model training
-├── popup.html             # Frontend UI
-├── popup.js               # Frontend logic
-├── manifest.json          # Chrome extension manifest file
-└── assets/                # Images, icons, and style sheets
+├── icons/                   # Icons used for the extension
+├── img/                     # Images used in the popup
+├── README.md                 # Project documentation (this file)
+├── backend.py                # Flask backend server for summarization and sentiment analysis
+├── background.js             # Chrome extension background script
+├── best_review_model.pkl     # Trained model for spam/irrelevant review detection
+├── chart.js                  # Script for rendering charts
+├── jquery-3.7.1.min.js        # jQuery library
+├── manifest.json             # Chrome extension manifest file
+├── popup.css                 # Styles for popup UI
+├── popup.html                # HTML structure of the popup
+├── popup.js                  # Main logic for frontend interactions
+├── settings.js               # Settings and configuration
+├── tfidf_vectorizer.pkl      # TF-IDF vectorizer for spam model
+└── to do list.txt            # Development tasks and future improvements
 ```
 
 ## Future Improvements
