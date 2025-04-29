@@ -9,7 +9,9 @@ RevAbi is a browser-based review analysis tool designed to help users make smart
 - ✨ **Summarization**: Condenses long reviews into concise summaries for quicker reading.
 - 😊 **Sentiment Analysis**: Classifies reviews as Positive, Neutral, or Negative using a deep learning model.
 - 📊 **Pros and Cons Extraction**: Highlights key positive and negative points from real user feedback.
+- 🥧 **Pie Chart**: Displays a pie-chart that counts the number of positive, neutral and negative reviews.
 - 📊 **Sentiment Distribution**: Displays sentiment percentages through easy-to-understand visuals.
+
 
 ## Tech Stack
 
@@ -86,6 +88,3 @@ RevAbi Extension/
 - Improve **UI/UX** with a more modern and responsive design.
 - Expand compatibility to other browsers such as **Safari** and **Firefox**.
 - Add **image scraping** to enrich product insights with visual context.
-
-
-
